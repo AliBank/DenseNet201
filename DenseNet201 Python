@@ -1,0 +1,159 @@
+from google.colab import drive
+drive.mount('/content/drive')
+
+!pip install -q keras
+!pip install h5py pyyaml
+
+from tensorflow.keras.applications import DenseNet201 
+from __future__ import absolute_import, division, print_function
+import os
+import tensorflow as tf
+from tensorflow import keras
+from keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras import layers
+from tensorflow.keras import Model
+from keras.layers import Flatten
+from tensorflow.keras.layers import Conv2D, AveragePooling2D, GlobalAveragePooling2D
+from keras.optimizers import RMSprop
+from tensorflow.keras.utils import img_to_array
+from tensorflow.keras.utils import load_img
+from tensorflow.keras.models import Sequential
+from keras.layers import Dense
+import matplotlib.pyplot as plt
+from glob import glob
+
+train_path="/content/drive/MyDrive/BaklagilDataSet/DB3_Histeq/fold1/train/images/"
+test_path="/content/drive/MyDrive/BaklagilDataSet/DB3_Histeq/fold1/test/images/"
+
+
+numberOfClass=len(glob(train_path+"/*"))
+
+print(numberOfClass)
+
+dens= DenseNet201(include_top=False, weights='imagenet',input_shape=(224,224,3))
+
+print(dens.summary())
+
+print(type(dens))
+
+dens_layer_list= dens.layers
+print(dens_layer_list)
+
+dens.trainable=False
+x =Flatten()(dens.output)
+x =GlobalAveragePooling2D()(dens.output)
+x= Dense(32, activation='relu')(x)
+x= Dense(32, activation='relu')(x)
+out=Dense(30,activation='softmax')(x)
+model= Model(inputs=dens.inputs, outputs=out, name='DenseNet201')
+
+print(len(model.layers))
+for layer in model.layers:
+  print(layer.name," ",layer.trainable)
+
+for layer in model.layers[:10]:
+  layer.trainable=False
+model.summary()  
+
+
+print(type(dens))
+
+from keras.optimizers.optimizer_v2.rmsprop import RMSProp
+optim_1 = RMSProp(lr=0.0001)
+model.compile(loss="categorical_crossentropy", optimizer=optim_1, metrics=["accuracy"])
+
+
+#train
+train_data= ImageDataGenerator().flow_from_directory(train_path, target_size=(224,224))
+test_data= ImageDataGenerator().flow_from_directory(test_path, target_size=(224,224))
+
+batch_size=50
+
+from keras.callbacks import ModelCheckpoint,CSVLogger
+filepath="/content/drive/MyDrive/saved_models/weights-improvement-{epoch:05d}.ckpt"
+checkpoint= ModelCheckpoint(filepath, monitor='val_acc', verbose=1, save_best_only=False,save_freq=360, mode='max')
+#log_csv =CSVLogger('my_logs.csv', separator=',', append=False)
+callbacks_list =[checkpoint]
+
+hist=model.fit_generator(train_data,
+                         steps_per_epoch=3600//batch_size,
+                         epochs=10,
+                         initial_epoch=0,
+                         validation_data= test_data,
+                         validation_steps = 900//batch_size,
+                         callbacks=callbacks_list)
+                         
+model.load_weights("/content/drive/MyDrive/saved_models/weights-improvement-00010.ckpt")
+
+hist=model.fit_generator(train_data,
+                         steps_per_epoch=3600//batch_size,
+                         epochs=20,
+                         initial_epoch=10,
+                         validation_data= test_data,
+                         validation_steps = 900//batch_size,
+                         callbacks=callbacks_list)
+                        
+model.load_weights("/content/drive/MyDrive/saved_models/weights-improvement-00020.ckpt")
+
+hist=model.fit_generator(train_data,
+                         steps_per_epoch=3600//batch_size,
+                         epochs=25,
+                         initial_epoch=20,
+                         validation_data= test_data,
+                         validation_steps = 900//batch_size,
+                         callbacks=callbacks_list)
+
+model.load_weights("/content/drive/MyDrive/saved_models/weights-improvement-00025.ckpt")
+
+hist=model.fit_generator(train_data,
+                         steps_per_epoch=3600//batch_size,
+                         epochs=40,
+                         initial_epoch=25,
+                         validation_data= test_data,
+                         validation_steps = 900//batch_size,
+                         callbacks=callbacks_list)
+
+model.load_weights("/content/drive/MyDrive/saved_models/weights-improvement-00040.ckpt")
+
+hist=model.fit_generator(train_data,
+                         steps_per_epoch=3600//batch_size,
+                         epochs=50,
+                         initial_epoch=40,
+                         validation_data= test_data,
+                         validation_steps = 900//batch_size,
+                         callbacks=callbacks_list)
+
+model.load_weights("/content/drive/MyDrive/saved_models/weights-improvement-00050.ckpt")
+
+hist=model.fit_generator(train_data,
+                         steps_per_epoch=3600//batch_size,
+                         epochs=65,
+                         initial_epoch=50,
+                         validation_data= test_data,
+                         validation_steps = 900//batch_size,
+                         callbacks=callbacks_list)
+
+model.load_weights("/content/drive/MyDrive/saved_models/weights-improvement-00065.ckpt")
+
+hist=model.fit_generator(train_data,
+                         steps_per_epoch=3600//batch_size,
+                         epochs=80,
+                         initial_epoch=65,
+                         validation_data= test_data,
+                         validation_steps = 900//batch_size,
+                         callbacks=callbacks_list)
+
+model.load_weights("/content/drive/MyDrive/saved_models/weights-improvement-00080.ckpt")
+
+hist=model.fit_generator(train_data,
+                         steps_per_epoch=3600//batch_size,
+                         epochs=100,
+                         initial_epoch=80,
+                         validation_data= test_data,
+                         validation_steps = 900//batch_size,
+                         callbacks=callbacks_list)
+
+model.load_weights("/content/drive/MyDrive/saved_models/weights-improvement-00100.ckpt")
+
+model.save_weights("BaklagilFold1RMSProplr0.0001Dens")
+                         
